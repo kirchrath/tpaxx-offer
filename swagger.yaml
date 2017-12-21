@@ -1,0 +1,122 @@
+swagger: '2.0'
+basePath: /
+schemes:
+ - http
+consumes:
+- application/offers.tpaxx.1+json
+produces:
+- application/offers.tpaxx.1+json
+info:
+  description: This is the tPAXX Offer API
+  version: 1.0.0
+  title: tPAXX Offer Service
+  contact:
+    email: api@tpaxx.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /:
+    get:
+      tags:
+      - offers
+      summary: get offers
+      operationId: findOffers
+      parameters:
+      - in: query
+        name: code
+        description: Hotel Code 
+        required: false
+        type: string
+      - in: query
+        name: from
+        description: First day of trip
+        required: false
+        type: string
+      - in: query
+        name: to
+        description: Last day of trip
+        required: false
+        type: string
+      - in: query
+        name: duration
+        description: Duration of trip
+        required: false
+        type: integer
+        default: 7
+      - in: query
+        name: passengers
+        description: Passengers 
+        required: false
+        type: integer
+        default: 2
+      - in: query
+        name: destination
+        description: Destination TLC
+        required: false
+        type: string
+      - in: query
+        name: source
+        description: Source TLC
+        required: false
+        type: string
+      responses:
+        200:
+          description: offer result
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Offer'
+definitions:
+  Offer:
+    type: object
+    required:
+    - id
+    properties:
+      id:
+        type: string
+        format: int32
+      outsource:
+        type: string
+      outdest:
+        type: string
+      start:
+        type: string
+      duration:
+        type: string
+        format: int32
+      hotelcode:
+        type: string
+      accommodation:
+        type: string
+      catering:
+        type: string
+      carrier:  
+        type: string
+      operator:
+        type: string
+      category:
+        type: string
+        format: int32
+      tourtype:
+        type: string
+      bmin:
+        type: string
+        format: int32
+      bmax:
+        type: string
+        format: int32
+      vmin:
+        type: string
+        format: int32
+      vmax:
+        type: string
+        format: int32
+      belegung:
+        type: string
+        format: int32
+      amount:
+        type: string
+        format: int32
+      currency:
+        type: string

@@ -1,0 +1,11 @@
+.vscode
+.cmd
+models
+.open
+example_small.if
+offers.db
+offers.sql
+t-paxx-offers-server
+
+restapi
+!restapi/configure_tpaxx_offers.go
