@@ -2,7 +2,9 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
+	"strings"
 	"tPaxxOffers/models"
 
 	errors "github.com/go-openapi/errors"
@@ -14,6 +16,7 @@ import (
 	"tPaxxOffers/restapi/operations"
 	"tPaxxOffers/restapi/operations/offers"
 
+	// import to provide sqlite connector
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -23,17 +26,70 @@ func configureFlags(api *operations.TPaxxOffersAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
 }
 
-func allOffers() (result []*models.Offer) {
+func allOffers(params offers.FindOffersParams) (result []*models.Offer) {
 	result = make([]*models.Offer, 0)
+	var argCounter = 1
+
+	var ANDS []string
+	var ANDPARAMS []interface{}
+
+	if params.Code != nil {
+		ANDS = append(ANDS, fmt.Sprintf("hotelcode = ?%d", argCounter))
+		ANDPARAMS = append(ANDPARAMS, *params.Code)
+		argCounter++
+	} else if params.Destination != nil {
+		ANDS = append(ANDS, fmt.Sprintf("outdest = ?%d", argCounter))
+		ANDPARAMS = append(ANDPARAMS, *params.Destination)
+		argCounter++
+	}
+
+	if params.Source != nil {
+		ANDS = append(ANDS, fmt.Sprintf("outsource = ?%d", argCounter))
+		ANDPARAMS = append(ANDPARAMS, *params.Source)
+		argCounter++
+	}
+
+	if params.Passengers != nil {
+		ANDS = append(ANDS, fmt.Sprintf("belegung = ?%d", argCounter))
+		ANDPARAMS = append(ANDPARAMS, *params.Passengers)
+		argCounter++
+	}
+
+	if params.Duration != nil {
+		ANDS = append(ANDS, fmt.Sprintf("duration = ?%d", argCounter))
+		ANDPARAMS = append(ANDPARAMS, *params.Duration)
+		argCounter++
+	}
+
+	// if params.From != nil {
+	// 	ANDS = append(ANDS, fmt.Sprintf(" = ?%d", argCounter))
+	// 	ANDPARAMS = append(ANDPARAMS, *params.From)
+	// 	argCounter++
+	// }
+
+	// if params.To != nil {
+	// 	ANDS = append(ANDS, fmt.Sprintf(" = ?%d", argCounter))
+	// 	ANDPARAMS = append(ANDPARAMS, *params.To)
+	// 	argCounter++
+	// }
 
 	db, err := sql.Open("sqlite3", "./offers.db")
 	checkErr(err)
+	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM offers order by preis LIMIT 100")
+	var queryString string
+	if argCounter > 1 {
+		queryString = "SELECT * FROM offers WHERE " + strings.Join(ANDS, " AND ") + " order by preis LIMIT 10"
+	} else {
+		queryString = "SELECT * FROM offers order by preis LIMIT 10"
+	}
 
+	println(queryString)
+	rows, err := db.Query(queryString, ANDPARAMS...)
 	checkErr(err)
+	defer rows.Close()
 
-	var offerId int32
+	var offerID int32
 	var outsource string
 	var outdest string
 	var start string
@@ -55,12 +111,12 @@ func allOffers() (result []*models.Offer) {
 
 	for rows.Next() {
 		err = rows.Scan(
-			&offerId, &outsource, &outdest, &start, &duration, &hotelcode,
+			&offerID, &outsource, &outdest, &start, &duration, &hotelcode,
 			&accommodation, &catering, &carrier, &operator, &category, &tourtype,
 			&bmin, &bmax, &vmin, &vmax, &belegung, &amount, &currency)
 		checkErr(err)
 
-		offer := models.Offer{ID: &offerId,
+		offer := models.Offer{ID: &offerID,
 			Outsource:     outsource,
 			Outdest:       outdest,
 			Start:         start,
@@ -107,15 +163,7 @@ func configureAPI(api *operations.TPaxxOffersAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 
 	api.OffersFindOffersHandler = offers.FindOffersHandlerFunc(func(params offers.FindOffersParams) middleware.Responder {
-		// params.HTTPRequest.URL.Query()[""]
-		// keys, ok := r.URL.Query()["key"]
-
-		// if !ok || len(keys) < 1 {
-		// 	log.Println("Url Param 'key' is missing")
-
-		// 	return
-		// }
-		return offers.NewFindOffersOK().WithPayload(allOffers())
+		return offers.NewFindOffersOK().WithPayload(allOffers(params))
 	})
 
 	api.ServerShutdown = func() {}
