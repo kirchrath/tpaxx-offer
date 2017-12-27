@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"tPaxxOffers/models"
+
+	"github.com/kirchrath/tpaxx-offer/models"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -13,8 +14,9 @@ import (
 	graceful "github.com/tylerb/graceful"
 
 	"database/sql"
-	"tPaxxOffers/restapi/operations"
-	"tPaxxOffers/restapi/operations/offers"
+
+	"github.com/kirchrath/tpaxx-offer/restapi/operations"
+	"github.com/kirchrath/tpaxx-offer/restapi/operations/offers"
 
 	// import to provide sqlite connector
 	_ "github.com/mattn/go-sqlite3"
